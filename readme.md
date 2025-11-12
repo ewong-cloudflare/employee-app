@@ -1,4 +1,4 @@
-# Employee Directory — Cloudflare Workers + D1
+# Employee App — Cloudflare Workers + D1
 
 This repository is a Cloudflare Worker project that implements a simple employee directory using **Cloudflare D1** for storage and a React + Tailwind frontend served by the Worker.
 
@@ -29,7 +29,7 @@ Features:
 
 3. Login to Cloudflare:
    ```bash
-   wrangler login
+   npx wrangler login
    ```
 
 4. Set up D1 database:
@@ -37,7 +37,7 @@ Features:
    - The database configuration is already set in `wrangler.jsonc`
    - If you need to create a new database:
      ```bash
-     wrangler d1 create employee_db
+     npxwrangler d1 create employee_db
      ```
    - If required, create table manually:
    ```
@@ -52,12 +52,6 @@ Features:
    ```
    - Update the `database_id` in `wrangler.jsonc` with your new database ID if needed
 
-## Development
-
-Run the development server:
-```bash
-wrangler dev
-```
 
 The application will be available at `http://localhost:8787`
 
@@ -65,7 +59,7 @@ The application will be available at `http://localhost:8787`
 
 1. Deploy to Cloudflare Workers:
    ```bash
-   wrangler deploy
+   npx wrangler deploy
    ```
 
 2. Your application will be available at `https://<worker-name>.<your-subdomain>.workers.dev`
