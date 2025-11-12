@@ -1,0 +1,22 @@
+// wrangler.jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "employee-app",
+  "main": "src/index.js",
+  "compatibility_date": "2025-11-09",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "employee_db",
+      "database_id": "c57daa34-c22a-4491-9336-fab86fb54689" 
+    }
+  ],
+    "observability": {
+    "enabled": true
+  },
+}
+
+
+
