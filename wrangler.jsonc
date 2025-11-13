@@ -13,6 +13,12 @@
       "database_id": "aa9fe457-456c-42d5-b9a2-cdf0506562d1" 
     }
   ],
+  	 "routes": [
+    {
+      "pattern": "employee-app.acmecorp.work",
+      "custom_domain": true
+    }
+  ],
     "observability": {
     "enabled": true
   },
