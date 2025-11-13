@@ -111,7 +111,7 @@ function App() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} employee(s)?`)) {
+    if (!confirm('Are you sure you want to delete ' + selectedIds.length + ' employee(s)?')) {
       return;
     }
 
@@ -127,7 +127,7 @@ function App() {
         throw new Error(data.error || 'Failed to delete employees');
       }
 
-      setSuccess(`Successfully deleted ${data.deletedCount} employee(s)`);
+      setSuccess('Successfully deleted ' + data.deletedCount + ' employee(s)');
       setSelectedIds([]);
       fetchList();
       setTimeout(() => setSuccess(''), 3000);
@@ -257,7 +257,7 @@ function App() {
           selectedIds.length > 0 && React.createElement('button', { 
             onClick: deleteSelected, 
             className: 'ml-2 bg-red-600 text-white px-4 py-2 rounded'
-          }, `Delete Selected (${selectedIds.length})`)
+          }, 'Delete Selected (' + selectedIds.length + ')')
         )
       )
     ),
