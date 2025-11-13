@@ -135,6 +135,7 @@ export async function deleteEmployees(env, employeeIds) {
   employeeIds = employeeIds.map(id => Number(id));
   console.log('Validated IDs:', employeeIds);
 
+  let deletedCount = 0;
   try {
     // First verify all IDs exist
     const checkSQL = `SELECT id FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;
@@ -154,15 +155,15 @@ export async function deleteEmployees(env, employeeIds) {
     const deleteSQL = `DELETE FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;    
     console.log('Delete SQL:', deleteSQL);
     
-    try {
-      const result = await env.employee_db.prepare(deleteSQL).bind(...employeeIds).run();
-      console.log('Delete result:', result);
-      deletedCount = result.changes || 0;
-      return { success: true, deletedCount };
-    } catch (err) {
-      console.error('Delete error:', err);
-      throw new Error(`Failed to delete employees: ${err.message}`);
+    const result = await env.employee_db.prepare(deleteSQL).bind(...employeeIds).run();
+    console.log('Delete result:', result);
+    deletedCount = result.changes || 0;
+    
+    if (deletedCount === 0) {
+      return { success: false, deletedCount: 0, errors: ['No records were deleted'] };
     }
+    
+    return { success: true, deletedCount };
   } catch (err) {
     console.error('Operation failed:', err);
     throw new Error(`Failed to delete employees: ${err.message}`);

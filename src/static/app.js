@@ -126,13 +126,13 @@ function App() {
       const data = await res.json();
       console.log('Delete response:', data);
 
-      if (!res.ok) {
-        console.error('Server error:', data);
-        throw new Error(data.error || data.details || 'Failed to delete employees');
-      }
-      if (!data.success) {
-        console.error('Operation failed:', data);
-        throw new Error(data.errors ? data.errors.join(', ') : 'Failed to delete employees');
+      if (!res.ok || !data.success) {
+        const errorMessage = data.errors ? data.errors.join(', ') : 
+                           data.details ? data.details :
+                           data.error ? data.error : 
+                           'Failed to delete employees';
+        setError(errorMessage);
+        return;
       }
 
       setSuccess('Successfully deleted ' + data.deletedCount + ' employee(s)');
@@ -141,9 +141,7 @@ function App() {
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Delete operation failed:', err);
-      const errorMessage = err.message || 'Failed to delete employees';
-      console.error('Setting error message:', errorMessage);
-      setError(errorMessage);
+      setError(err.message || 'An unexpected error occurred while deleting employees');
     }
   }
 
