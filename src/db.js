@@ -118,6 +118,8 @@ export async function listEmployees(env) {
  * @returns {Promise<{success: boolean, deletedCount: number, errors?: string[]}>}
  */
 export async function deleteEmployees(env, employeeIds) {
+  console.log('Starting delete operation for IDs:', employeeIds);
+  
   if (!env.employee_db) throw new Error("D1 binding 'employee_db' not found in environment");
   if (!Array.isArray(employeeIds) || employeeIds.length === 0) {
     throw new Error("No employee IDs provided for deletion");
@@ -131,6 +133,7 @@ export async function deleteEmployees(env, employeeIds) {
 
   // Convert all IDs to numbers
   employeeIds = employeeIds.map(id => Number(id));
+  console.log('Validated IDs:', employeeIds);
 
   const errors = [];
   let deletedCount = 0;
@@ -140,14 +143,17 @@ export async function deleteEmployees(env, employeeIds) {
     await env.employee_db.prepare('BEGIN TRANSACTION').run();
 
     // First verify all IDs exist
-    const checkSQL = `SELECT COUNT(*) as count FROM employees WHERE id = ?`;
-    const checkStmt = env.employee_db.prepare(checkSQL);
+    const checkSQL = `SELECT id FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;
+    console.log('Checking existing IDs with SQL:', checkSQL);
     
-    for (const id of employeeIds) {
-      const check = await checkStmt.bind(id).first();
-      if (!check || check.count === 0) {
-        errors.push(`Employee ${id} not found`);
-      }
+    const checkResult = await env.employee_db.prepare(checkSQL).bind(...employeeIds).all();
+    console.log('Check result:', checkResult);
+    
+    const foundIds = new Set((checkResult?.results || []).map(row => row.id));
+    const missingIds = employeeIds.filter(id => !foundIds.has(id));
+    
+    if (missingIds.length > 0) {
+      errors.push(`Employees not found: ${missingIds.join(', ')}`);
     }
 
     if (errors.length > 0) {
@@ -155,18 +161,16 @@ export async function deleteEmployees(env, employeeIds) {
       return { success: false, deletedCount: 0, errors };
     }
 
-    const deleteSQL = `DELETE FROM employees WHERE id = ?`;
-    const stmt = env.employee_db.prepare(deleteSQL);
-
-    for (const id of employeeIds) {
-      try {
-        const result = await stmt.bind(id).run();
-        if (result.changes > 0) {
-          deletedCount++;
-        }
-      } catch (err) {
-        errors.push(`Failed to delete employee ${id}: ${err.message}`);
-      }
+    const deleteSQL = `DELETE FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;    
+    console.log('Delete SQL:', deleteSQL);
+    
+    try {
+      const result = await env.employee_db.prepare(deleteSQL).bind(...employeeIds).run();
+      console.log('Delete result:', result);
+      deletedCount = result.changes || 0;
+    } catch (err) {
+      console.error('Delete error:', err);
+      throw new Error(`Failed to delete employees: ${err.message}`);
     }
 
     if (errors.length === 0) {

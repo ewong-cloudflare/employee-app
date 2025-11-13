@@ -116,6 +116,7 @@ function App() {
     }
 
     try {
+      console.log('Attempting to delete IDs:', selectedIds);
       const res = await fetch('/api/employees', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -123,10 +124,14 @@ function App() {
       });
 
       const data = await res.json();
+      console.log('Delete response:', data);
+
       if (!res.ok) {
+        console.error('Server error:', data);
         throw new Error(data.error || data.details || 'Failed to delete employees');
       }
       if (!data.success) {
+        console.error('Operation failed:', data);
         throw new Error(data.errors ? data.errors.join(', ') : 'Failed to delete employees');
       }
 
@@ -135,8 +140,10 @@ function App() {
       fetchList();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'Failed to delete employees');
+      console.error('Delete operation failed:', err);
+      const errorMessage = err.message || 'Failed to delete employees';
+      console.error('Setting error message:', errorMessage);
+      setError(errorMessage);
     }
   }
 
