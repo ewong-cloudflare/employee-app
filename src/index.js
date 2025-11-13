@@ -34,7 +34,7 @@ function withStandardHeaders(res) {
   headers.set("Referrer-Policy", "no-referrer");
   // CORS (adjust origin in production)
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set("Access-Control-Allow-Methods", "GET,HEAD,POST,OPTIONS");
+  headers.set("Access-Control-Allow-Methods", "GET,HEAD,POST,DELETE,OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type");
   return new Response(res.body, { status: res.status, headers });
 }

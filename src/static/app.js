@@ -124,7 +124,10 @@ function App() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to delete employees');
+        throw new Error(data.error || data.details || 'Failed to delete employees');
+      }
+      if (!data.success) {
+        throw new Error(data.errors ? data.errors.join(', ') : 'Failed to delete employees');
       }
 
       setSuccess('Successfully deleted ' + data.deletedCount + ' employee(s)');
