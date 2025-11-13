@@ -123,12 +123,37 @@ export async function deleteEmployees(env, employeeIds) {
     throw new Error("No employee IDs provided for deletion");
   }
 
+  // Validate that all IDs are numbers
+  const invalidIds = employeeIds.filter(id => typeof id !== 'number' && (typeof id !== 'string' || isNaN(Number(id))));
+  if (invalidIds.length > 0) {
+    throw new Error(`Invalid employee IDs: ${invalidIds.join(', ')}. All IDs must be numbers.`);
+  }
+
+  // Convert all IDs to numbers
+  employeeIds = employeeIds.map(id => Number(id));
+
   const errors = [];
   let deletedCount = 0;
 
   // Use a transaction to ensure all deletions are atomic
   try {
     await env.employee_db.prepare('BEGIN TRANSACTION').run();
+
+    // First verify all IDs exist
+    const checkSQL = `SELECT COUNT(*) as count FROM employees WHERE id = ?`;
+    const checkStmt = env.employee_db.prepare(checkSQL);
+    
+    for (const id of employeeIds) {
+      const check = await checkStmt.bind(id).first();
+      if (!check || check.count === 0) {
+        errors.push(`Employee ${id} not found`);
+      }
+    }
+
+    if (errors.length > 0) {
+      await env.employee_db.prepare('ROLLBACK').run();
+      return { success: false, deletedCount: 0, errors };
+    }
 
     const deleteSQL = `DELETE FROM employees WHERE id = ?`;
     const stmt = env.employee_db.prepare(deleteSQL);

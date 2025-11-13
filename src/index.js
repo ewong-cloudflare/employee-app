@@ -22,10 +22,10 @@ function withStandardHeaders(res) {
   headers.set(
     "Content-Security-Policy",
     "default-src 'self' https://unpkg.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; " +
-    "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; " +
+    "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://static.cloudflareinsights.com; " +
     "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com data:; " +
-    "connect-src 'self'; " +
+    "connect-src 'self' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; " +
     "img-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
     "frame-ancestors 'self'; " +
     "base-uri 'self';"
