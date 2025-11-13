@@ -8,9 +8,9 @@
 
   "d1_databases": [
     {
-      "binding": "DB",
+      "binding": "employee_db",
       "database_name": "employee_db",
-      "database_id": "c57daa34-c22a-4491-9336-fab86fb54689" 
+      "database_id": "aa9fe457-456c-42d5-b9a2-cdf0506562d1" 
     }
   ],
     "observability": {
