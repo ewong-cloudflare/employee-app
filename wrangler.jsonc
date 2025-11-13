@@ -1,28 +1,26 @@
 // wrangler.jsonc
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "employee-app",
-  "main": "src/index.js",
-  "compatibility_date": "2025-11-09",
-  "compatibility_flags": ["nodejs_compat"],
-
-  "d1_databases": [
-    {
-      "binding": "employee_db",
-      "database_name": "employee_db",
-      "database_id": "aa9fe457-456c-42d5-b9a2-cdf0506562d1" 
-    }
-  ],
-  	 "routes": [
-    {
-      "pattern": "employee-app.acmecorp.work",
-      "custom_domain": true
-    }
-  ],
-    "observability": {
-    "enabled": true
-  },
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "employee-app",
+	"main": "src/index.js",
+	"compatibility_date": "2025-11-09",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"d1_databases": [
+		{
+			"binding": "employee_db",
+			"database_name": "employee_db",
+			"database_id": "34c48e62-9b48-4bad-a8c3-c67ead7feb45"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "employee-app.acmecorp.work",
+			"custom_domain": true
+		}
+	],
+	"observability": {
+		"enabled": true
+	},
 }
-
-
-
