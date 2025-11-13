@@ -135,13 +135,7 @@ export async function deleteEmployees(env, employeeIds) {
   employeeIds = employeeIds.map(id => Number(id));
   console.log('Validated IDs:', employeeIds);
 
-  const errors = [];
-  let deletedCount = 0;
-
-  // Use a transaction to ensure all deletions are atomic
   try {
-    await env.employee_db.prepare('BEGIN TRANSACTION').run();
-
     // First verify all IDs exist
     const checkSQL = `SELECT id FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;
     console.log('Checking existing IDs with SQL:', checkSQL);
@@ -153,14 +147,10 @@ export async function deleteEmployees(env, employeeIds) {
     const missingIds = employeeIds.filter(id => !foundIds.has(id));
     
     if (missingIds.length > 0) {
-      errors.push(`Employees not found: ${missingIds.join(', ')}`);
+      return { success: false, deletedCount: 0, errors: [`Employees not found: ${missingIds.join(', ')}`] };
     }
 
-    if (errors.length > 0) {
-      await env.employee_db.prepare('ROLLBACK').run();
-      return { success: false, deletedCount: 0, errors };
-    }
-
+    // All IDs exist, proceed with deletion
     const deleteSQL = `DELETE FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;    
     console.log('Delete SQL:', deleteSQL);
     
@@ -168,24 +158,13 @@ export async function deleteEmployees(env, employeeIds) {
       const result = await env.employee_db.prepare(deleteSQL).bind(...employeeIds).run();
       console.log('Delete result:', result);
       deletedCount = result.changes || 0;
+      return { success: true, deletedCount };
     } catch (err) {
       console.error('Delete error:', err);
       throw new Error(`Failed to delete employees: ${err.message}`);
     }
-
-    if (errors.length === 0) {
-      await env.employee_db.prepare('COMMIT').run();
-      return { success: true, deletedCount };
-    } else {
-      // If there were any errors, roll back the transaction
-      await env.employee_db.prepare('ROLLBACK').run();
-      return { success: false, deletedCount: 0, errors };
-    }
   } catch (err) {
-    // Ensure rollback on any unexpected errors
-    try {
-      await env.employee_db.prepare('ROLLBACK').run();
-    } catch {}
-    throw new Error(`Transaction failed: ${err.message}`);
+    console.error('Operation failed:', err);
+    throw new Error(`Failed to delete employees: ${err.message}`);
   }
 }
