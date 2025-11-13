@@ -155,9 +155,16 @@ export async function deleteEmployees(env, employeeIds) {
     const deleteSQL = `DELETE FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;    
     console.log('Delete SQL:', deleteSQL);
     
-    const result = await env.employee_db.prepare(deleteSQL).bind(...employeeIds).run();
-    console.log('Delete result:', result);
-    deletedCount = result.changes || 0;
+    // Execute delete
+    await env.employee_db.prepare(deleteSQL).bind(...employeeIds).run();
+    
+    // Verify deletion by checking if records still exist
+    const verifySQL = `SELECT COUNT(*) as count FROM employees WHERE id IN (${employeeIds.map(() => '?').join(',')})`;    
+    const verifyResult = await env.employee_db.prepare(verifySQL).bind(...employeeIds).first();
+    console.log('Verify result:', verifyResult);
+    
+    // Calculate how many were deleted by comparing with original count
+    deletedCount = employeeIds.length - (verifyResult?.count || 0);
     
     if (deletedCount === 0) {
       return { success: false, deletedCount: 0, errors: ['No records were deleted'] };
