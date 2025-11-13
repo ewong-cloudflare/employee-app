@@ -121,6 +121,27 @@ export default {
         }
       }
 
+      // API: delete employees
+      if (pathname === "/api/employees" && request.method === "DELETE") {
+        const contentType = request.headers.get("Content-Type") || "";
+        if (!contentType.includes("application/json")) {
+          return withStandardHeaders(new Response(JSON.stringify({ error: "Content-Type must be application/json" }), { status: 415, headers: { "Content-Type": "application/json" } }));
+        }
+
+        const payload = await request.json();
+        if (!Array.isArray(payload.ids) || payload.ids.length === 0) {
+          return withStandardHeaders(new Response(JSON.stringify({ error: "ids must be a non-empty array of employee IDs" }), { status: 400, headers: { "Content-Type": "application/json" } }));
+        }
+
+        try {
+          const result = await db.deleteEmployees(env, payload.ids);
+          return withStandardHeaders(new Response(JSON.stringify(result), { status: result.success ? 200 : 400, headers: { "Content-Type": "application/json" } }));
+        } catch (err) {
+          console.error("DB delete error:", err?.message || err);
+          return withStandardHeaders(new Response(JSON.stringify({ error: "Database delete failed", details: String(err?.message || err) }), { status: 500, headers: { "Content-Type": "application/json" } }));
+        }
+      }
+
       // Not found
       return withStandardHeaders(new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { "Content-Type": "application/json" } }));
 

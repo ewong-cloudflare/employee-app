@@ -110,3 +110,53 @@ export async function listEmployees(env) {
   const res = await env.employee_db.prepare(sql).all();
   return res.results || [];
 }
+
+/**
+ * Delete multiple employees by their IDs.
+ * @param {Bindings} env
+ * @param {number[]} employeeIds - Array of employee IDs to delete
+ * @returns {Promise<{success: boolean, deletedCount: number, errors?: string[]}>}
+ */
+export async function deleteEmployees(env, employeeIds) {
+  if (!env.employee_db) throw new Error("D1 binding 'employee_db' not found in environment");
+  if (!Array.isArray(employeeIds) || employeeIds.length === 0) {
+    throw new Error("No employee IDs provided for deletion");
+  }
+
+  const errors = [];
+  let deletedCount = 0;
+
+  // Use a transaction to ensure all deletions are atomic
+  try {
+    await env.employee_db.prepare('BEGIN TRANSACTION').run();
+
+    const deleteSQL = `DELETE FROM employees WHERE id = ?`;
+    const stmt = env.employee_db.prepare(deleteSQL);
+
+    for (const id of employeeIds) {
+      try {
+        const result = await stmt.bind(id).run();
+        if (result.changes > 0) {
+          deletedCount++;
+        }
+      } catch (err) {
+        errors.push(`Failed to delete employee ${id}: ${err.message}`);
+      }
+    }
+
+    if (errors.length === 0) {
+      await env.employee_db.prepare('COMMIT').run();
+      return { success: true, deletedCount };
+    } else {
+      // If there were any errors, roll back the transaction
+      await env.employee_db.prepare('ROLLBACK').run();
+      return { success: false, deletedCount: 0, errors };
+    }
+  } catch (err) {
+    // Ensure rollback on any unexpected errors
+    try {
+      await env.employee_db.prepare('ROLLBACK').run();
+    } catch {}
+    throw new Error(`Transaction failed: ${err.message}`);
+  }
+}

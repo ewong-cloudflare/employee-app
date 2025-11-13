@@ -33,6 +33,7 @@ function App() {
   const [form, setForm] = useState({ nirc: '', fullName: '', position: '', email: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -102,6 +103,54 @@ function App() {
       console.error(err);
       setError(err.message || 'Unknown error');
     }
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.length === 0) {
+      setError('No employees selected');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} employee(s)?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/employees', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete employees');
+      }
+
+      setSuccess(`Successfully deleted ${data.deletedCount} employee(s)`);
+      setSelectedIds([]);
+      fetchList();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to delete employees');
+    }
+  }
+
+  function toggleSelectAll(e) {
+    if (e.target.checked) {
+      setSelectedIds(employees.map(emp => emp.id));
+    } else {
+      setSelectedIds([]);
+    }
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(x => x !== id)
+        : [...prev, id]
+    );
   }
 
   function exportPDF() {
@@ -200,11 +249,15 @@ function App() {
       ),
 
       React.createElement('div', { className: 'bg-white p-4 rounded shadow' },
-        React.createElement('h2', { className: 'font-semibold mb-2' }, 'Export'),
+        React.createElement('h2', { className: 'font-semibold mb-2' }, 'Actions'),
         React.createElement('p', { className: 'text-sm text-slate-600 mb-4' }, 'You can download all records as a PDF (client-side).'),
         React.createElement('div', null,
           React.createElement('button', { onClick: exportPDF, className: 'bg-green-600 text-white px-4 py-2 rounded' }, 'Export to PDF'),
-          React.createElement('button', { onClick: fetchList, className: 'ml-2 bg-gray-200 px-4 py-2 rounded' }, 'Refresh')
+          React.createElement('button', { onClick: fetchList, className: 'ml-2 bg-gray-200 px-4 py-2 rounded' }, 'Refresh'),
+          selectedIds.length > 0 && React.createElement('button', { 
+            onClick: deleteSelected, 
+            className: 'ml-2 bg-red-600 text-white px-4 py-2 rounded'
+          }, `Delete Selected (${selectedIds.length})`)
         )
       )
     ),
@@ -216,7 +269,14 @@ function App() {
         React.createElement('table', { className: 'w-full table-auto text-sm' },
           React.createElement('thead', null,
             React.createElement('tr', { className: 'text-left border-b' },
-              React.createElement('th', { className: 'p-2' }, 'ID'),
+              React.createElement('th', { className: 'p-2' }, 
+                React.createElement('input', {
+                  type: 'checkbox',
+                  checked: selectedIds.length === employees.length,
+                  onChange: toggleSelectAll,
+                  className: 'rounded'
+                })
+              ),
               React.createElement('th', { className: 'p-2' }, 'NIRC'),
               React.createElement('th', { className: 'p-2' }, 'Full name'),
               React.createElement('th', { className: 'p-2' }, 'Position'),
@@ -226,8 +286,18 @@ function App() {
           ),
           React.createElement('tbody', null,
             employees.map(emp =>
-              React.createElement('tr', { key: emp.id, className: 'border-b' },
-                React.createElement('td', { className: 'p-2 align-top' }, emp.id),
+              React.createElement('tr', { 
+                key: emp.id, 
+                className: 'border-b hover:bg-slate-50 ' + (selectedIds.includes(emp.id) ? 'bg-blue-50' : '')
+              },
+                React.createElement('td', { className: 'p-2 align-top' }, 
+                  React.createElement('input', {
+                    type: 'checkbox',
+                    checked: selectedIds.includes(emp.id),
+                    onChange: () => toggleSelect(emp.id),
+                    className: 'rounded'
+                  })
+                ),
                 React.createElement('td', { className: 'p-2 align-top' }, emp.nirc),
                 React.createElement('td', { className: 'p-2 align-top' }, emp.full_name),
                 React.createElement('td', { className: 'p-2 align-top' }, emp.position),
